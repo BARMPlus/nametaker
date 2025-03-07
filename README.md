@@ -27,8 +27,7 @@
 ```
 # mac的包太大，github的上限是100mb，所以没有上传，自己进行构建
 1、npm install  # 安装依赖
-2、npm start # dev
-3、npm run build:mac # 构建 mac 包
+2、npm run build:mac # 构建 mac 包
 ```
 
 # 二次开发
