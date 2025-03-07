@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title>沈老师随机点名</title>
+    <link rel="icon" href="./favicon.png" />
+    <script src="./xlsx.full.min.js"></script>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #FFD1DC, #FFF0F5);
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', 楷体, cursive;
+        }
+
+        .title {
+            text-align: center;
+            color: #FF69B4;
+            text-shadow: 2px 2px #FFFFFF;
+            margin: 20px 0;
+            letter-spacing: 3px;
+            font-size: calc(1vw + 50px);
+        }
+
+        #nameBox {
+            min-height: 350px;
+            height: 50%;
+            margin: 50px 30px 30px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        #nameDisplay {
+            font-size: 4em;
+            font-weight: 900;
+            color: #FF69B4;
+            transition: all 0.3s;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.3em;
+            background: #FF69B4;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            background: #FF1493;
+        }
+
+        .speedSlider {
+            position: absolute;
+            height: 200px;
+            top: -20px;
+            right: -10px;
+            bottom: 150px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .speedContainer {
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 150px;
+            height: 15px;
+            transform: rotate(270deg);
+            background: #FFB6C1;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #FF69B4;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .speedIcons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            right: 30px;
+        }
+
+        .speedIcons span {
+            font-size: 24px;
+            color: #FF69B4;
+        }
+
+
+        .selected {
+            color: #4169E1 !important;
+            text-shadow: 2px 2px #B0E0E6;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #87CEFA !important;
+        }
+
+        .status {
+            color: #FF69B4;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        /* 自动结束时间框样式 */
+        .autoEndContainer {
+            margin-left: 20px;
+        }
+
+        .autoEndContainer input {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border-radius: 30px;
+            border: 2px solid #FF69B4;
+            background-color: #FFF0F5;
+            width: 180px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .autoEndContainer input:focus {
+            border-color: #FF1493;
+            outline: none;
+        }
+
+        /* Excel文件列表样式 */
+        .fileList {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fileItem {
+            height: 60px;
+            padding: 10px 20px;
+            background: #FFB6C1;
+            border-radius: 25px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .fileItem:hover {
+            background: #FF69B4;
+            color: white;
+        }
+
+        .fileItem.selected {
+            background: #FF1493;
+            color: white;
+        }
+
+        .fileItem.selected .deleteBtn {
+            display: none;
+        }
+
+        .deleteBtn {
+            background: #FF6347;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .deleteBtn:hover {
+            background: #FF4500;
+        }
+
+        /* Toast 样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 删除确认弹窗样式 */
+        .confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 245, 245, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .confirm-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.2);
+            text-align: center;
+            max-width: 400px;
+            transform: scale(0.8);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .confirm-box.show {
+            transform: scale(1);
+        }
+
+        .confirm-title {
+            font-size: 1.8em;
+            color: #FF69B4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .confirm-message {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .confirm-btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .confirm-btn.cancel {
+            background: #87CEFA;
+            color: white;
+        }
+
+        .confirm-btn.delete {
+            background: #FF69B4;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 多选结果样式 */
+        .multi-result {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .multi-result span {
+            background: #FFB6C1;
+            border-radius: 10px;
+            font-size: calc(1vw + 15px);
+            padding: 5px;
+            color: #000;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            90% {
+                transform: scale(1.5);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 调整输入框布局 */
+        .controls {
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+<h1 class="title">🌸沈老师随机点名抽问🌸</h1>
+
+<div id="nameBox">
+    <div id="nameDisplay">请先导入名单</div>
+</div>
+
+<div class="controls">
+    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">导入Excel名单</button>
+    <div class="autoEndContainer">
+        <label for="count">抽选人数：</label>
+        <input type="number" id="count" value="1" min="1" placeholder="1"
+               style="width: 120px; margin-right: 15px;" />
+    </div>
+    <button id="rollButton" onclick="toggleRoll()" disabled>开始点名</button>
+    <div class="autoEndContainer">
+        <label for="autoEndTime">自动结束时间（秒）：</label>
+        <input type="number" id="autoEndTime" placeholder="不填写则手动结束" />
+    </div>
+</div>
+
+<div class="speedSlider">
+    <div class="speedContainer">
+        <div class="speedIcons">
+            <span>🐇</span>
+            <span>🐢</span>
+        </div>
+        <input type="range" id="speed" min="10" max="100" value="50" oninput="updateSpeed(this.value)">
+    </div>
+</div>
+
+<input type="file" id="fileInput" accept=".xlsx, .xls" onchange="handleFile(this.files)" />
+<div class="status" id="status">当前学生数：0人</div>
+
+
+<div class="fileList" id="fileList"></div>
+
+<div id="toast" class="toast"></div> <!-- Toast容器 -->
+
+<div class="confirm-modal" id="confirmModal">
+    <div class="confirm-box">
+        <div class="confirm-title">
+            <span>⚠️</span>
+            删除确认
+        </div>
+        <div class="confirm-message" id="confirmMessage"></div>
+        <div class="confirm-buttons">
+            <button class="confirm-btn cancel" onclick="hideConfirm()">取消</button>
+            <button class="confirm-btn delete" onclick="handleDelete()">确定删除</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let globalFiles = []
+let globalFileNames = []
+let students = []
+let currentFileName = ''
+let isRolling = false
+let intervalId
+let currentSpeed = 50
+let autoEndTimeout
+// 替换原来的deleteFile函数
+let deleteFileName = ''
+
+// 显示Toast
+function showToast(message) {
+  const toast = document.getElementById('toast')
+  toast.textContent = message
+  toast.classList.add('show')
+  setTimeout(() => {
+    toast.classList.remove('show')
+  }, 3000) // 3秒后自动消失
+}
+
+// 处理文件上传
+function handleFile(files) {
+  const file = files[0]
+  const reader = new FileReader()
+
+  reader.onload = function (e) {
+    try {
+      const data = new Uint8Array(e.target.result)
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })
+
+      const headers = jsonData[0].map(h => (h || '').toString()
+        .trim()
+        .toLowerCase())
+      const nameColIndex = headers.findIndex(h =>
+        h.includes('姓名') || h.includes('name') || h.includes('学生'),
+      )
+
+      if (nameColIndex === -1) {
+        showToast('未找到包含\'姓名\'的列！')
+        return
+      }
+
+      const formatData = jsonData
+        .slice(1)
+        .map(row => row[nameColIndex])
+        .map(name => name && name.toString()
+          .trim())
+        .filter(name => !!name)
+
+      if (formatData.length === 0) {
+        showToast('姓名列中没有有效数据！')
+        return
+      }
+
+      if (!currentFileName) {
+        students = formatData
+        localStorage.setItem('currentFileName', file.name)
+        currentFileName = file.name
+        updateStatus()
+        document.getElementById('nameDisplay').textContent = '准备就绪'
+        document.getElementById('rollButton').disabled = false
+      }
+
+      // 将数据保存到localStorage
+      localStorage.setItem(file.name, JSON.stringify(formatData))
+      updateFileList()
+
+    } catch (error) {
+      showToast('文件读取失败：' + error.message)
+    }
+  }
+
+  reader.readAsArrayBuffer(file)
+}
+
+// 更新文件列表
+function updateFileList() {
+  const fileListDiv = document.getElementById('fileList')
+  fileListDiv.innerHTML = '' // 清空现有列表
+
+  let fileNames = Object.keys(localStorage)
+    .filter(key => key.endsWith('.xlsx') || key.endsWith('.xls'))
+  fileNames = [...fileNames, ...globalFileNames]
+    .filter((item, index, array) => {
+      // 去重
+      return array.indexOf(item) === index
+    })
+
+  fileNames.forEach(fileName => {
+    const fileItem = document.createElement('div')
+    fileItem.classList.add('fileItem')
+    fileItem.textContent = fileName
+
+    if (!globalFileNames.includes(fileName)) {
+      // 删除按钮
+      const deleteBtn = document.createElement('button')
+      deleteBtn.classList.add('deleteBtn')
+      deleteBtn.textContent = '🗑️'
+      deleteBtn.onclick = (events) => {
+        events.stopPropagation()
+        deleteFile(fileName)
+      }
+
+      fileItem.appendChild(deleteBtn)
+    }
+
+    fileItem.onclick = () => selectFile(fileName)
+
+    if (fileName === currentFileName) {
+      fileItem.classList.add('selected')
+    }
+
+    fileListDiv.appendChild(fileItem)
+  })
+}
+
+function getStudents(fileName) {
+  return globalFileNames.includes(fileName) ? globalFiles.find((item) => item.fileName === fileName)?.data || [] : JSON.parse(localStorage.getItem(fileName))
+}
+
+// 选择文件
+function selectFile(fileName) {
+  students = getStudents(fileName)
+  currentFileName = fileName
+  localStorage.setItem('currentFileName', fileName)
+  updateStatus()
+  document.getElementById('rollButton').disabled = false
+  document.getElementById('nameDisplay').textContent = '准备就绪'
+  updateFileList()
+}
+
+// 删除文件
+function deleteFile(fileName) {
+  deleteFileName = fileName
+  const modal = document.getElementById('confirmModal')
+  const message = document.getElementById('confirmMessage')
+  message.textContent = `确定要删除 ${fileName} 吗？`
+  modal.style.display = 'flex'
+  setTimeout(() => {
+    document.querySelector('.confirm-box')
+      .classList
+      .add('show')
+  }, 10)
+}
+
+function hideConfirm() {
+  document.querySelector('.confirm-box')
+    .classList
+    .remove('show')
+  setTimeout(() => {
+    document.getElementById('confirmModal').style.display = 'none'
+  }, 300)
+}
+
+function handleDelete() {
+  localStorage.removeItem(deleteFileName)
+  if (currentFileName === deleteFileName) {
+    currentFileName = ''
+    students = []
+    document.getElementById('nameDisplay').textContent = '请先导入名单'
+    document.getElementById('rollButton').disabled = true
+  }
+  updateFileList()
+  hideConfirm()
+  showToast(`已成功删除 ${deleteFileName}`)
+}
+
+// 点击遮罩层关闭
+document.getElementById('confirmModal')
+  .addEventListener('click', function (e) {
+    if (e.target === this) hideConfirm()
+  })
+
+// 更新学生数量状态
+function updateStatus() {
+  document.getElementById('status').textContent =
+    `当前学生数：${(students && students.length) || 0}人`
+}
+
+// 启动或暂停点名
+function toggleRoll() {
+  const display = document.getElementById('nameDisplay')
+  if (students.length === 0) {
+    showToast('请先导入学生名单！')
+    return
+  }
+
+  // 获取抽选人数
+  const count = parseInt(document.getElementById('count').value) || 1
+
+  if (count > 50) {
+    showToast(`抽选人数不能超过50！`)
+    return
+  }
+  if (count > students.length) {
+    showToast(`抽选人数不能超过学生总数！`)
+    return
+  }
+
+  if (isRolling) {
+    clearInterval(intervalId)
+    if (autoEndTimeout) clearTimeout(autoEndTimeout)
+    display.classList.add('selected')
+    showToast(`已抽选${count}位学生！`)
+
+    // 最终显示多个结果
+    if (count > 1) {
+      const indexes = getUniqueIndexes(count)
+      display.innerHTML = `<div class="multi-result">${indexes.map(i => `<span>${students[i]}</span>`)
+        .join('')
+      }</div>`
+    }
+  }
+  else {
+    display.classList.remove('selected')
+    display.textContent = '' // 清空之前的结果
+    startRoll(count)
+  }
+  isRolling = !isRolling
+  document.getElementById('rollButton').textContent =
+    isRolling ? '暂停抽选' : '开始点名'
+}
+
+// 新增获取不重复索引函数
+function getUniqueIndexes(count) {
+  const indexes = new Set()
+  while (indexes.size < count) {
+    indexes.add(Math.floor(Math.random() * students.length))
+  }
+  return Array.from(indexes)
+}
+
+// 开始点名
+function startRoll(count) {
+  let currentIndexes = []
+
+  intervalId = setInterval(() => {
+    currentIndexes = getUniqueIndexes(count)
+    document.getElementById('nameDisplay').innerHTML = count > 1
+      ? `<div class="multi-result">${currentIndexes.map(i => `<span>${students[i]}</span>`)
+        .join('')
+      }</div>`
+      : students[currentIndexes[0]]
+  }, 110 - currentSpeed)
+
+  // 自动结束逻辑
+  const autoEndTime = document.getElementById('autoEndTime').value
+  if (autoEndTime) {
+    autoEndTimeout = setTimeout(() => {
+      toggleRoll()
+      showToast(`已抽选${count}位学生！`)
+    }, autoEndTime * 1000)
+  }
+}
+
+// 更新速度
+function updateSpeed(value) {
+  currentSpeed = value
+  if (isRolling) {
+    clearInterval(intervalId)
+    startRoll()
+  }
+}
+
+async function loadXlsxFiles() {
+  if (!window.electronAPI) return // 非Electron环境不执行
+  try {
+    const fileContent = await window.electronAPI.getXlsxFiles()
+    globalFiles = fileContent.files || []
+
+    if (fileContent.files.length) {
+      showToast('内置数据导入成功')
+      globalFileNames = fileContent.files.map(({ fileName }) => fileName)
+    }
+  } catch (error) {
+    console.error('加载文件失败:', error)
+  }
+}
+
+window.onload = async function () {
+  currentFileName = localStorage.getItem('currentFileName')
+
+  await loadXlsxFiles()
+
+  updateFileList()
+
+  if (currentFileName) {
+    students = getStudents(currentFileName)
+    updateStatus()
+    document.getElementById('rollButton').disabled = false
+    document.getElementById('nameDisplay').textContent = '准备就绪'
+  }
+}
+
+</script>
+</body>
+
+</html>

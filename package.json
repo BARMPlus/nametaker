@@ -1,0 +1,50 @@
+{
+  "name": "nametaker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/main.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development electronmon .",
+    "build:mac:default": "electron-builder --mac --config.directories.output=dist/mac",
+    "build:mac": "electron-builder --mac --universal --config.directories.output=dist/mac",
+    "build:win": "electron-builder --win --config.directories.output=dist/win"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "electronmon": "^2.0.3"
+  },
+  "build": {
+    "appId": "com.electron.yourappid",
+    "productName": "沈老师点名器",
+    "asar": false,
+    "files": [
+      "src/**/*",
+      "files/**/*",
+      "icons/**/*",
+      "!node_modules/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "icons/icon.icns"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "icons/icon.ico"
+    }
+  }
+}

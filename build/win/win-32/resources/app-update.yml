@@ -1,0 +1,4 @@
+owner: BARMPlus
+repo: nametaker
+provider: github
+updaterCacheDirName: nametaker-updater
